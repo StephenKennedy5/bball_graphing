@@ -1,13 +1,14 @@
+'''Graph any player in the nba from the 2019-2020 season'''
 import pandas as pd
 from matplotlib import pyplot as plt
 import json
 import PySimpleGUI as sg
 
+'''Choose team you want to select player from'''
 def choose_team():
     with open('player_stats.json') as f:
       data = json.load(f)
     team_names = list(data.keys())
-    players = list(data.values())
 
     choices = team_names
 
@@ -23,15 +24,15 @@ def choose_team():
             break
         if event == 'Ok':
             if values['_team_']:    # if something is highlighted in the list
-                team = values['_team_']
+                team = str(values['_team_']).strip('[]')[1:-1]
                 break
 
     window.close()
 
-    team = str(team).strip('[]')[1:-1]
     f.close()
-    return team, players, data
+    return team, data
 
+'''Choose player of choice from team'''
 def choose_player(team, data):
     choices = list(data[team].keys())
 
@@ -49,20 +50,21 @@ def choose_player(team, data):
             break
         if event == 'Submit':
             if values['_player_']:
-                player = values['_player_']
+                player = str(values['_player_']).strip('[]')[1:-1]
                 break
 
     window.close()
 
-    player = str(player).strip('[]')[1:-1]
     return player
 
+'''Returns data frame from bball ref of player stats'''
 def get_stats(data, team, player):
     df = pd.read_html(data[team][player],skiprows=(21,42,63),
             na_values =['Inactive','Did Not Play', 'Did Not Dress'])[-1]
 
     return df
 
+'''Chooose what stats you want to graph'''
 def choose_stats(df):
     category= ['PTS','FG%','AST','TRB','G','MP','FG','FGA','3P','3PA','FT','FTA','FT%','ORB',
                     'DRB','STL','BLK','TOV','PF','GmSc','+/-']
@@ -110,6 +112,7 @@ def choose_stats(df):
 
     return df,inputx,inputy,COLOR,Title,graph_style
 
+'''Creates graph'''
 def make_graph(df,inputx,inputy,COLOR,Title,graph_style):
     plt.style.use(graph_style)
     plt.scatter(df[inputx],df[inputy], c=df['G'], cmap=COLOR, edgecolor='black',
@@ -125,7 +128,7 @@ def make_graph(df,inputx,inputy,COLOR,Title,graph_style):
     plt.show()
 
 
-team, players, data = choose_team()
+team, data = choose_team()
 player = choose_player(team,data)
 df = get_stats(data,team,player)
 df,inputx,inputy,COLOR,Title,graph_style = choose_stats(df)
